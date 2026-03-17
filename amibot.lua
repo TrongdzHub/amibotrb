@@ -5,20 +5,14 @@ local camera = workspace.CurrentCamera
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- =====================
 -- SETTINGS
--- =====================
-
 local FOV_RADIUS = 120
 local SMOOTHNESS = 0.08
 
 _G.Aimbot = false
 local holding = false
 
--- =====================
 -- GUI
--- =====================
-
 local gui = Instance.new("ScreenGui")
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
@@ -48,10 +42,7 @@ btn.MouseButton1Click:Connect(function()
     btn.Text = "AIM: " .. (_G.Aimbot and "ON" or "OFF")
 end)
 
--- =====================
--- FOV CIRCLE
--- =====================
-
+-- FOV CIRCLE (GIỮA MÀN)
 local circle = Drawing.new("Circle")
 circle.Radius = FOV_RADIUS
 circle.Thickness = 2
@@ -59,15 +50,13 @@ circle.Filled = false
 circle.Color = Color3.fromRGB(0,255,255)
 circle.Visible = true
 
-RunService.RenderStepped:Connect(function()
-    local mousePos = UIS:GetMouseLocation()
-    circle.Position = mousePos
-end)
+-- LINE AIM
+local line = Drawing.new("Line")
+line.Thickness = 2
+line.Color = Color3.fromRGB(255,0,0)
+line.Visible = false
 
--- =====================
--- INPUT (TAP / BẮN)
--- =====================
-
+-- TAP SCREEN
 UIS.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Touch then
         holding = true
@@ -80,22 +69,22 @@ UIS.InputEnded:Connect(function(input)
     end
 end)
 
--- =====================
--- GET TARGET TRONG FOV
--- =====================
-
+-- GET TARGET (THEO TÂM MÀN)
 local function getTarget()
+
     local closest = nil
     local shortest = FOV_RADIUS
+
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
 
     for _,v in pairs(game.Players:GetPlayers()) do
         if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
             
             local pos, onScreen = camera:WorldToViewportPoint(v.Character.Head.Position)
-            
+
             if onScreen then
-                local dist = (Vector2.new(pos.X,pos.Y) - UIS:GetMouseLocation()).Magnitude
-                
+                local dist = (Vector2.new(pos.X,pos.Y) - center).Magnitude
+
                 if dist < shortest then
                     shortest = dist
                     closest = v
@@ -107,36 +96,55 @@ local function getTarget()
     return closest
 end
 
--- =====================
--- AIMBOT LEGIT
--- =====================
-
+-- MAIN LOOP
 RunService.RenderStepped:Connect(function()
+
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+
+    -- FOV luôn giữa
+    circle.Position = center
 
     if _G.Aimbot and holding then
         
         local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-        
-        -- chỉ aim khi cầm súng / đang bắn
+
         if tool then
             
             local target = getTarget()
-            
+
             if target and target.Character then
                 
                 local head = target.Character:FindFirstChild("Head")
-                
+
                 if head then
                     local camPos = camera.CFrame.Position
                     local direction = (head.Position - camPos).Unit
-                    
+
                     local newCF = CFrame.new(camPos, camPos + direction)
-                    
                     camera.CFrame = camera.CFrame:Lerp(newCF, SMOOTHNESS)
+
+                    -- DRAW LINE
+                    local pos, onScreen = camera:WorldToViewportPoint(head.Position)
+
+                    if onScreen then
+                        line.From = center
+                        line.To = Vector2.new(pos.X,pos.Y)
+                        line.Visible = true
+                    else
+                        line.Visible = false
+                    end
                 end
-                
+
+            else
+                line.Visible = false
             end
+
+        else
+            line.Visible = false
         end
+
+    else
+        line.Visible = false
     end
 
 end)
