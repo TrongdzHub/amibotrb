@@ -46,7 +46,6 @@ task.delay(4, function()
 	loadingGui:Destroy()
 end)
 
-
 -- ================= SCRIPT CHÍNH =================
 
 local camera = workspace.CurrentCamera
