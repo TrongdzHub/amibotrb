@@ -1,6 +1,54 @@
 repeat task.wait() until game:IsLoaded()
 
+-- LOADING NEON + TYPEWRITER
 local player = game.Players.LocalPlayer
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "LoadingGui"
+loadingGui.Parent = game.CoreGui
+
+local loadingText = Instance.new("TextLabel", loadingGui)
+loadingText.Size = UDim2.new(0, 300, 0, 40)
+loadingText.Position = UDim2.new(0.5, -150, 0.5, -20)
+loadingText.BackgroundTransparency = 1
+loadingText.Text = ""
+loadingText.TextScaled = true
+loadingText.Font = Enum.Font.GothamBold
+loadingText.TextColor3 = Color3.fromRGB(0,255,170)
+
+-- neon glow
+loadingText.TextStrokeTransparency = 0
+loadingText.TextStrokeColor3 = Color3.fromRGB(0,255,170)
+
+local fullText = "Trong đẹp trai"
+
+-- gõ chữ
+task.spawn(function()
+	for i = 1, #fullText do
+		loadingText.Text = string.sub(fullText, 1, i)
+		task.wait(0.07)
+	end
+end)
+
+-- hiệu ứng neon nhấp nháy
+task.spawn(function()
+	while true do
+		loadingText.TextColor3 = Color3.fromRGB(0,255,170)
+		loadingText.TextStrokeColor3 = Color3.fromRGB(0,255,170)
+		task.wait(0.3)
+		loadingText.TextColor3 = Color3.fromRGB(0,170,255)
+		loadingText.TextStrokeColor3 = Color3.fromRGB(0,170,255)
+		task.wait(0.3)
+	end
+end)
+
+-- tự xoá loading
+task.delay(4, function()
+	loadingGui:Destroy()
+end)
+
+
+-- ================= SCRIPT CHÍNH =================
+
 local camera = workspace.CurrentCamera
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -42,7 +90,7 @@ btn.MouseButton1Click:Connect(function()
     btn.Text = "AIM: " .. (_G.Aimbot and "ON" or "OFF")
 end)
 
--- FOV CIRCLE (GIỮA MÀN)
+-- FOV CIRCLE
 local circle = Drawing.new("Circle")
 circle.Radius = FOV_RADIUS
 circle.Thickness = 2
@@ -69,9 +117,8 @@ UIS.InputEnded:Connect(function(input)
     end
 end)
 
--- GET TARGET (THEO TÂM MÀN)
+-- GET TARGET
 local function getTarget()
-
     local closest = nil
     local shortest = FOV_RADIUS
 
@@ -100,8 +147,6 @@ end
 RunService.RenderStepped:Connect(function()
 
     local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
-
-    -- FOV luôn giữa
     circle.Position = center
 
     if _G.Aimbot and holding then
@@ -123,7 +168,6 @@ RunService.RenderStepped:Connect(function()
                     local newCF = CFrame.new(camPos, camPos + direction)
                     camera.CFrame = camera.CFrame:Lerp(newCF, SMOOTHNESS)
 
-                    -- DRAW LINE
                     local pos, onScreen = camera:WorldToViewportPoint(head.Position)
 
                     if onScreen then
